@@ -3,7 +3,6 @@
  * base_view.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * Base class for widgets which view forms.
  * 
  * @abstract
- * @package cenozo\ui
  */
 abstract class base_form_view
   extends \cenozo\ui\widget\base_record
@@ -48,9 +46,6 @@ abstract class base_form_view
     
     $id = $this->get_argument( 'id' );
 
-    // determine properties based on the current user's permissions
-    $session = lib::create( 'business\session' );
-
     $this->set_heading( sprintf( 'Viewing %s #%d', $this->get_subject(), $id ) );
 
     // Set the two form entries
@@ -74,22 +69,6 @@ abstract class base_form_view
   {
     parent::setup();
     
-    // validate the entries
-    $error_list_1 = array();
-    if( !is_null( $this->form_entry_1 ) )
-    {
-      $args = array( 'id' => $this->form_entry_1->id );
-      $operation = lib::create( sprintf( 'ui\pull\%s_entry_validate', $this->get_subject() ), $args );
-      $error_list_1 = $operation->process();
-    }
-    $error_list_2 = array();
-    if( !is_null( $this->form_entry_2 ) )
-    {
-      $args = array( 'id' => $this->form_entry_2->id );
-      $operation = lib::create( sprintf( 'ui\pull\%s_entry_validate', $this->get_subject() ), $args );
-      $error_list_2 = $operation->process();
-    }
-
     $operation_class_name = lib::get_class_name( 'database\operation' );
 
     // add in form actions
@@ -110,7 +89,8 @@ abstract class base_form_view
 
       $args = array( 'id' => $this->form_entry_1->id );
       $operation = lib::create( sprintf( 'ui\pull\%s_entry_validate', $this->get_subject() ), $args );
-      $error_list_1 = $operation->process();
+      $operation->process();
+      $error_list_1 = $operation->get_data();
     }
     $error_list_2 = array();
     if( !is_null( $this->form_entry_2 ) )
@@ -121,33 +101,70 @@ abstract class base_form_view
 
       $args = array( 'id' => $this->form_entry_2->id );
       $operation = lib::create( sprintf( 'ui\pull\%s_entry_validate', $this->get_subject() ), $args );
-      $error_list_2 = $operation->process();
+      $operation->process();
+      $error_list_2 = $operation->get_data();
     }
 
     foreach( $this->items as $item_id => $item )
     {
-      $this->items[$item_id]['entry_1'] = is_null( $this->form_entry_1 )
-        ? array( 'user' => 'n/a',
-                 'error' => false,
-                 'value' => '(no value)' )
-        : array( 'user' => sprintf( '%s%s',
-                                    $this->form_entry_1->get_user()->name,
-                                    $this->form_entry_1->deferred ? ' (deferred)' : '' ),
-                 'error' => array_key_exists( $item_id, $error_list_1 )
-                          ? $error_list_1[$item_id] : false,
-                 'value' => is_null( $this->form_entry_1->$item_id )
-                          ? '(no value)' : $this->form_entry_1->$item_id );
-      $this->items[$item_id]['entry_2'] = is_null( $this->form_entry_2 )
-        ? array( 'user' => 'n/a',
-                 'error' => false,
-                 'value' => '(no value)' )
-        : array( 'user' => sprintf( '%s%s',
-                                    $this->form_entry_2->get_user()->name,
-                                    $this->form_entry_2->deferred ? ' (deferred)' : '' ),
-                 'error' => array_key_exists( $item_id, $error_list_2 )
-                          ? $error_list_2[$item_id] : false,
-                 'value' => is_null( $this->form_entry_2->$item_id ) 
-                          ? '(no value)' : $this->form_entry_2->$item_id );
+      // get the user, error and value for the first entry
+      $entry = array( 'user' => 'n/a',
+                      'error' => false,
+                      'value' => '(no value)' );
+      if( !is_null( $this->form_entry_1 ) )
+      {
+        $entry['user'] = sprintf( '%s%s',
+                                  $this->form_entry_1->get_user()->name,
+                                  $this->form_entry_1->deferred ? ' (deferred)' : '' );
+
+        if( array_key_exists( $item_id, $error_list_1 ) )
+          $entry['error'] = $error_list_1[$item_id];
+
+        if( !is_null( $this->form_entry_1->$item_id ) )
+        {
+          if( preg_match( '/region_id/', $item_id ) )
+          {
+            $db_region = lib::create( 'database\region', $this->form_entry_1->$item_id );
+            $entry['value'] = $db_region->name.', '.$db_region->country;
+          }
+          else $entry['value'] = $this->form_entry_1->$item_id;
+        }
+      }
+      $this->items[$item_id]['entry_1'] = $entry;
+
+      // get the user, error and value for the second entry
+      $entry = array( 'user' => 'n/a',
+                      'error' => false,
+                      'value' => '(no value)' );
+      if( !is_null( $this->form_entry_2 ) )
+      {
+        $entry['user'] = sprintf( '%s%s',
+                                  $this->form_entry_2->get_user()->name,
+                                  $this->form_entry_2->deferred ? ' (deferred)' : '' );
+
+        if( array_key_exists( $item_id, $error_list_2 ) )
+          $entry['error'] = $error_list_2[$item_id];
+
+        if( !is_null( $this->form_entry_2->$item_id ) )
+        {
+          if( preg_match( '/region_id/', $item_id ) )
+          {
+            $db_region = lib::create( 'database\region', $this->form_entry_2->$item_id );
+            $entry['value'] = $db_region->name.', '.$db_region->country;
+          }
+          else $entry['value'] = $this->form_entry_2->$item_id;
+        }
+      }
+      $this->items[$item_id]['entry_2'] = $entry;
+
+      // set whether the item is in conflict
+      $this->items[$item_id]['conflict'] =
+        ( is_string( $this->items[$item_id]['entry_1']['value'] ) &&
+          0 != strcasecmp( $this->items[$item_id]['entry_1']['value'],
+                           $this->items[$item_id]['entry_2']['value'] ) ) ||
+        ( !is_string( $this->items[$item_id]['entry_1']['value'] ) &&
+          $this->items[$item_id]['entry_1']['value'] !=
+          $this->items[$item_id]['entry_2']['value'] );
     }
 
     $this->set_variable( 'entry_1', is_null( $this->form_entry_1 )

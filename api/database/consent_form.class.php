@@ -3,7 +3,6 @@
  * consent_form.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\database
  * @filesource
  */
 
@@ -12,8 +11,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
 
 /**
  * consent_form: record
- *
- * @package mastodon\database
  */
 class consent_form extends base_form
 {
@@ -55,13 +52,28 @@ class consent_form extends base_form
     }
     else
     { // no duplicate, create a new consent record
-      $db_consent = lib::create( 'database\consent' );
-      $db_consent->participant_id = $db_participant->id;
-      $db_consent->event =
-        sprintf( 'written %s', $db_consent_form_entry->option_1 ? 'accept' : 'deny' );
-      $db_consent->date = util::get_datetime_object()->format( 'Y-m-d' );
-      $db_consent->note = 'Imported by data entry system.';
-      $db_consent->save();
+      $event = sprintf( 'written %s', $db_consent_form_entry->option_1 ? 'accept' : 'deny' );
+      $columns = array( 'participant_id' => $db_participant->id,
+                        'event' => $event,
+                        'date' => $date,
+                        'note' => 'Imported by data entry system.' );
+      $args = array( 'columns' => $columns );
+      $db_operation = lib::create( 'ui\push\consent_new', $args );
+      $db_operation->process();
+
+      // now find that new consent so we can link to its ID
+      $consent_mod = lib::create( 'database\modifier' );
+      $consent_mod->where( 'event', '=', $event );
+      $consent_mod->where( 'date', '=', $date );
+      $consent_list = $db_participant->get_consent_list( $consent_mod );
+      if( 0 < count( $consent_list ) )
+      {
+        $db_consent = current( $consent_list );
+      }
+      else
+      {
+        log::warning( 'Consent entry not found after importing consent form.' );
+      }
     }
 
     // import the data to the hin table
@@ -74,7 +86,7 @@ class consent_form extends base_form
 
     // save the new consent record to the form
     $this->complete = true;
-    $this->consent_id = $db_consent->id;
+    if( !is_null( $db_consent ) ) $this->consent_id = $db_consent->id;
     $this->save();
   }
 }

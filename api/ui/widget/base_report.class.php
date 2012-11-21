@@ -3,7 +3,6 @@
  * base_report.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * Base class for all report widgets
  * 
  * @abstract
- * @package mastodon\ui
  */
 abstract class base_report extends \cenozo\ui\widget\base_report
 {
@@ -67,7 +65,7 @@ abstract class base_report extends \cenozo\ui\widget\base_report
 
     if( $this->restrictions[ 'source' ] )
     {
-      $sources = array();
+      $sources = array( 0 => 'all' );
       $class_name = lib::get_class_name( 'database\source' );
       foreach( $class_name::select() as $db_source )
         $sources[ $db_source->id ] = $db_source->name;

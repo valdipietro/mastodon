@@ -3,7 +3,6 @@
  * proxy_form_entry_view.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -12,8 +11,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
 
 /**
  * widget proxy_form_entry view
- * 
- * @package mastodon\ui
  */
 class proxy_form_entry_view extends base_form_entry_view
 {
@@ -97,7 +94,8 @@ class proxy_form_entry_view extends base_form_entry_view
 
     // create enum arrays
     $region_mod = lib::create( 'database\modifier' );
-    $region_mod->where( 'country', '=', 'Canada' );
+    $region_mod->order( 'country' );
+    $region_mod->order( 'name' );
     $region_list = array();
     foreach( $region_class_name::select( $region_mod ) as $db_region )
       $region_list[$db_region->id] = $db_region->name.', '.$db_region->country;

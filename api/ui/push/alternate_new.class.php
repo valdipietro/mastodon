@@ -3,7 +3,6 @@
  * alternate_new.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * push: alternate new
  *
  * Create a new alternate.
- * @package mastodon\ui
  */
 class alternate_new extends \cenozo\ui\push\base_new
 {
@@ -60,6 +58,8 @@ class alternate_new extends \cenozo\ui\push\base_new
     parent::setup();
 
     $alternate_class_name = lib::get_class_name( 'database\alternate' );
+
+    $columns = $this->get_argument( 'columns' );
 
     // special case: replace alternate's with the same first/last name
     $alternate_mod = lib::create( 'database\modifier' );

@@ -3,7 +3,6 @@
  * proxy_form_entry_new.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * push: proxy_form_entry new
  *
  * Create a new proxy_form_entry.
- * @package mastodon\ui
  */
 class proxy_form_entry_new extends base_form_entry_new
 {
@@ -26,6 +24,10 @@ class proxy_form_entry_new extends base_form_entry_new
    */
   public function __construct( $args )
   {
+    // make sure not to include forms from onyx
+    $this->form_mod = lib::create( 'database\modifier' );
+    $this->form_mod->where( 'from_onyx', '=', false );
+
     parent::__construct( 'proxy', $args );
   }
 }

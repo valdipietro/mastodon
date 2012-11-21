@@ -3,7 +3,6 @@
  * participant_edit.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * push: participant edit
  *
  * Edit a participant.
- * @package mastodon\ui
  */
 class participant_edit extends \cenozo\ui\push\base_edit
 {
@@ -60,14 +58,10 @@ class participant_edit extends \cenozo\ui\push\base_edit
     {
       $columns = $this->get_argument( 'columns', array() );
 
-      // don't send information 
+      // don't send certain information
       if( array_key_exists( 'cohort', $columns ) ||
-          array_key_exists( 'gender', $columns ) ||
-          array_key_exists( 'date_of_birth', $columns ) ||
-          array_key_exists( 'eligible', $columns ) ||
           array_key_exists( 'no_in_home', $columns ) ||
-          array_key_exists( 'use_informant', $columns ) ||
-          array_key_exists( 'email', $columns ) )
+          array_key_exists( 'use_informant', $columns ) )
         $this->set_machine_request_enabled( false );
     }
   }

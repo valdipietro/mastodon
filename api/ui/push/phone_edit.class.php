@@ -3,7 +3,6 @@
  * phone_edit.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * push: phone edit
  *
  * Edit a phone.
- * @package mastodon\ui
  */
 class phone_edit extends \cenozo\ui\push\base_edit
 {
@@ -82,28 +80,6 @@ class phone_edit extends \cenozo\ui\push\base_edit
   }
 
   /**
-   * Override the parent method to replace the person key with a participant key.
-   * @author Patrick Emond <emondpd@mcmaster.ca>
-   * @param array $args An argument list, usually those passed to the push operation.
-   * @return array
-   * @access protected
-   */
-  protected function convert_to_noid( $args )
-  {
-    $args = parent::convert_to_noid( $args );
-
-    // replace person key with participant key
-    $person_id = $args['noid']['phone']['person_id'];
-    unset( $args['noid']['phone']['person_id'] );
-    $participant_class_name = lib::get_class_name( 'database\participant' );
-    $db_participant = $this->get_record()->get_person()->get_participant();
-    $args['noid']['phone']['participant_id'] =
-      $participant_class_name::get_unique_from_primary_key( $db_participant->id );
-
-    return $args;
-  }
-
-  /**
    * Override the parent method to replace the participant key with a person key.
    * @author Patrick Emond <emondpd@mcmaster.ca>
    * @param array $args An argument list, usually those passed to the push operation.
@@ -121,6 +97,17 @@ class phone_edit extends \cenozo\ui\push\base_edit
       unset( $args['noid']['phone']['participant_id'] );
       $db_participant = lib::create( 'database\participant', $participant_id );
       $args['noid']['phone']['person_id'] = $db_participant->person_id;
+
+      if( array_key_exists( 'columns', $args['noid'] ) &&
+          array_key_exists( 'address', $args['noid']['columns'] ) &&
+          is_array( $args['noid']['columns']['address'] ) &&
+          array_key_exists( 'participant_id', $args['noid']['columns']['address'] ) )
+      {
+        unset( $args['noid']['columns']['address']['participant_id'] );
+        // same as above
+        $args['noid']['columns']['address']['person_id'] =
+          $args['noid']['phone']['person_id'];
+      }
     }
 
     return parent::convert_from_noid( $args );

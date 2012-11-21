@@ -178,6 +178,10 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "participant", "list_alternate", true, "Retrieves a list of a participant's alternates." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "participant", "list_consent", true, "Retrieves a list of participant's consent information." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "participant", "site_reassign", true, "A form to mass reassign the preferred site of multiple participants at once." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "participant", "site_reassign", true, "Updates the preferred site of a group of participants." );
 
 -- phone
 INSERT INTO operation( type, subject, name, restricted, description )
@@ -205,6 +209,8 @@ VALUES( "push", "proxy_form", "edit", true, "Edits the details of a scanned prox
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "proxy_form", "list", true, "Lists scanned proxy forms." );
 INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "proxy_form", "new", true, "Adds a new proxy form directly into the data entry system." );
+INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "proxy_form", "view", true, "View the details of a scanned proxy form." );
 
 -- proxy_form_entry
@@ -221,6 +227,22 @@ VALUES( "pull", "proxy_form_entry", "validate", true, "Validates the entry value
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "proxy_form_entry", "view", true, "View the details of entry values for a proxy form." );
 
+-- quota
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "quota", "delete", true, "Removes a quota from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "quota", "edit", true, "Edits a quota's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "quota", "new", true, "Add a new quota to the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "quota", "add", true, "View a form for creating a new quota." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "quota", "view", true, "View a quota's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "quota", "list", true, "List quotas in the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "quota", "primary", true, "Retrieves base quota information." );
+
 -- reports
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "mailout", "report", true, "Set up a mailout report." );
@@ -230,5 +252,9 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "alternate", "report", true, "Set up a alternate report." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "alternate", "report", true, "Download a alternate report." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "quota", "report", true, "Set up a quota report." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "quota", "report", true, "Download a quota report." );
 
 COMMIT;

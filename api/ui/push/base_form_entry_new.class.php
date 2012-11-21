@@ -3,7 +3,6 @@
  * base_form_entry_new.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -12,8 +11,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
 
 /**
  * Base class for all form_entry new operations
- *
- * @package mastodon\ui
  */
 abstract class base_form_entry_new extends \cenozo\ui\push\base_new
 {
@@ -45,9 +42,7 @@ abstract class base_form_entry_new extends \cenozo\ui\push\base_new
     $semaphore = sem_get( getmyinode() );
     if( !sem_acquire( $semaphore ) )
     {
-      log::err( sprintf(
-        'Unable to aquire semaphore for user id %d',
-        $session->get_user()->id ) );
+      log::err( sprintf( 'Unable to aquire semaphore for user "%s"', $db_user()->name ) );
       throw lib::create( 'exception\notice',
         'The server is busy, please wait a few seconds then click the refresh button.',
         __METHOD__ );
@@ -56,11 +51,11 @@ abstract class base_form_entry_new extends \cenozo\ui\push\base_new
     // This new operation is different from others.  Instead of providing an ID the system must
     // instead search for one, reporting a notice if none are available
     $found = false;
-    $form_mod = lib::create( 'database\modifier' );
-    $form_mod->where( 'invalid', '=', false );
-    $form_mod->where( 'complete', '=', false );
-    $form_mod->order( 'id' );
-    foreach( $form_class_name::select( $form_mod ) as $db_form )
+    if( is_null( $this->form_mod ) ) $this->form_mod = lib::create( 'database\modifier' );
+    $this->form_mod->where( 'invalid', '=', false );
+    $this->form_mod->where( 'complete', '=', false );
+    $this->form_mod->order( 'id' );
+    foreach( $form_class_name::select( $this->form_mod ) as $db_form )
     {
       // find a form which has less than 2 entries
       $form_entry_mod = lib::create( 'database\modifier' );
@@ -83,11 +78,7 @@ abstract class base_form_entry_new extends \cenozo\ui\push\base_new
 
     // release the semaphore
     if( !sem_release( $semaphore ) )
-    {
-      log::err( sprintf(
-        'Unable to release semaphore for user id %d',
-        $session->get_user()->id ) );
-    }
+      log::err( sprintf( 'Unable to release semaphore for user %s', $db_user->name ) );
   }
 
   /**
@@ -96,5 +87,12 @@ abstract class base_form_entry_new extends \cenozo\ui\push\base_new
    * @access private
    */
   private $form_type;
+
+  /**
+   * The modifier used when selecting a new form.
+   * @var database\modifier $form_mod
+   * @access protected
+   */
+  private $form_mod;
 }
 ?>

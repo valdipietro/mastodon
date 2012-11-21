@@ -3,7 +3,6 @@
  * participant_list.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * Class for participant list pull operations.
  * 
  * @abstract
- * @package mastodon\ui
  */
 class participant_list extends \cenozo\ui\pull\base_list
 {
@@ -114,14 +112,14 @@ class participant_list extends \cenozo\ui\pull\base_list
             'person_id' != $column_name &&
             'participant_id' != $column_name )
         {
-          if( '_id' == substr( $column_name, -3 ) )
+          if( '_id' == substr( $column_name, -3 ) && !is_null( $record->$column_name ) )
           {
             $subject = substr( $column_name, 0, -3 );
             $class_name = lib::get_class_name( 'database\\'.$subject );
             $key = $class_name::get_unique_from_primary_key( $record->$column_name );
 
             // convert person keys to participant keys
-            if( array_key_exists( 'person_id', $key ) )
+            if( is_array( $key ) && array_key_exists( 'person_id', $key ) )
             {
               // replace person key with participant key
               $participant_id = $record->get_person()->get_participant()->id;

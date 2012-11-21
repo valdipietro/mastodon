@@ -3,7 +3,6 @@
  * site_restricted_list.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -12,8 +11,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
 
 /**
  * Base class for all list widgets which may be restricted by site.
- * 
- * @package mastodon\ui
  */
 abstract class site_restricted_list extends \cenozo\ui\widget\site_restricted_list
 {
@@ -48,7 +45,8 @@ abstract class site_restricted_list extends \cenozo\ui\widget\site_restricted_li
                : sprintf( '%s (%s)',
                           $this->db_restrict_site->name,
                           $this->db_restrict_site->cohort );
-    $this->set_heading( $this->get_heading().' for '.$predicate );
+
+    $this->set_heading( $this->get_subject().' list for '.$predicate );
   }
   
   /**
@@ -61,8 +59,12 @@ abstract class site_restricted_list extends \cenozo\ui\widget\site_restricted_li
   {
     parent::setup();
 
-    // we're restricting to a site, so remove the cohort column
-    if( !is_null( $this->db_restrict_site ) ) $this->remove_column( 'cohort' );
+    // we're restricting to a site, so remove the site and cohort columns
+    if( !is_null( $this->db_restrict_site ) )
+    {
+      $this->remove_column( 'site' );
+      $this->remove_column( 'cohort' );
+    }
 
     if( static::may_restrict() )
     {
@@ -90,14 +92,12 @@ abstract class site_restricted_list extends \cenozo\ui\widget\site_restricted_li
    * @return int
    * @access protected
    */
-  protected function determine_record_count( $modifier = NULL )
+  public function determine_record_count( $modifier = NULL )
   {
     if( !is_null( $this->db_restrict_site ) )
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-      $site_column = 'comprehensive' == $this->db_restrict_site->cohort
-                   ? ( $this->extended_site_selection ? 'jurisdiction.' : '' ).'site_id'
-                   : ( $this->extended_site_selection ? 'participant_site.' : '' ).'site_id';
+      $site_column = ( $this->extended_site_selection ? 'participant_site.' : '' ).'site_id';
       $modifier->where( $site_column, '=', $this->db_restrict_site->id );
     }
 
@@ -115,14 +115,12 @@ abstract class site_restricted_list extends \cenozo\ui\widget\site_restricted_li
    * @return array( record )
    * @access protected
    */
-  protected function determine_record_list( $modifier = NULL )
+  public function determine_record_list( $modifier = NULL )
   {
     if( !is_null( $this->db_restrict_site ) )
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-      $site_column = 'comprehensive' == $this->db_restrict_site->cohort
-                   ? ( $this->extended_site_selection ? 'jurisdiction.' : '' ).'site_id'
-                   : ( $this->extended_site_selection ? 'participant_site.' : '' ).'site_id';
+      $site_column = ( $this->extended_site_selection ? 'participant_site.' : '' ).'site_id';
       $modifier->where( $site_column, '=', $this->db_restrict_site->id );
     }
 

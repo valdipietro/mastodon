@@ -3,7 +3,6 @@
  * user_edit.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * push: user edit
  *
  * Edit a user.
- * @package mastodon\ui
  */
 class user_edit extends \cenozo\ui\push\user_edit
 {
@@ -70,12 +68,14 @@ class user_edit extends \cenozo\ui\push\user_edit
     if( 'beartooth' != $this->get_machine_application_name() )
     {
       $this->set_machine_request_url( BEARTOOTH_URL );
+      $this->use_machine_credentials( true );
       parent::send_machine_request();
     }
 
     if( 'sabretooth' != $this->get_machine_application_name() )
     {
       $this->set_machine_request_url( SABRETOOTH_URL );
+      $this->use_machine_credentials( true );
       parent::send_machine_request();
     }
   }

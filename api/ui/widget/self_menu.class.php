@@ -3,7 +3,6 @@
  * self_menu.class.php
  * 
  * @author Patrick Emond <emondpd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -12,8 +11,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
 
 /**
  * widget self menu
- * 
- * @package mastodon\ui
  */
 class self_menu extends \cenozo\ui\widget\self_menu
 {
@@ -46,16 +43,26 @@ class self_menu extends \cenozo\ui\widget\self_menu
   {
     parent::setup();
 
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+
     $utilities = $this->get_variable( 'utilities' );
 
-    // insert the participant import into the utilities
-    $operation_class_name = lib::get_class_name( 'database\operation' );
+    // insert participant import into the utilities
     $db_operation = $operation_class_name::get_operation( 'widget', 'import', 'add' );
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
       $utilities[] = array( 'heading' => 'Participant Import',
                             'type' => 'widget',
                             'subject' => 'import',
                             'name' => 'add' );
+
+    // insert participant site reassign into the utilities
+    $db_operation =
+      $operation_class_name::get_operation( 'widget', 'participant', 'site_reassign' );
+    if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
+      $utilities[] = array( 'heading' => 'Participant Reassign',
+                            'type' => 'widget',
+                            'subject' => 'participant',
+                            'name' => 'site_reassign' );
 
     $this->set_variable( 'utilities', $utilities );
   }

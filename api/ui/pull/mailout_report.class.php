@@ -3,7 +3,6 @@
  * mailout_report.class.php
  * 
  * @author Dean Inglis <inglisd@mcmaster.ca>
- * @package mastodon\ui
  * @filesource
  */
 
@@ -14,7 +13,6 @@ use cenozo\lib, cenozo\log, mastodon\util;
  * Mailout required report data.
  * 
  * @abstract
- * @package mastodon\ui
  */
 class mailout_report extends \cenozo\ui\pull\base_report
 {
@@ -31,34 +29,51 @@ class mailout_report extends \cenozo\ui\pull\base_report
   }
 
   /**
-   * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   * Builds the report.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected function setup()
+  protected function build()
   {
-    parent::setup();
-
     // get the report arguments
+    $mailed_to = $this->get_argument( 'mailed_to' );
     $cohort = $this->get_argument( 'restrict_cohort' );
-    $db_source = lib::create( 'database\source', $this->get_argument( 'restrict_source_id' ) );
+    $source_id = $this->get_argument( 'restrict_source_id' );
+    $db_source = $source_id ? lib::create( 'database\source', $source_id ) : NULL;
     $mark_mailout = $this->get_argument( 'mark_mailout' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
 
-    $this->add_title( 
-      sprintf( 'List of all %s participant whose source is %s and require a package mailed out.',
-               $cohort,
-               $db_source->name ) );
+    if( is_null( $db_source ) )
+    {
+      $this->add_title( 
+        sprintf( $mailed_to ?
+                 'List of all unsynched %s participants who have been mailed to.' :
+                 'List of all %s participants who require a package mailed out.',
+                 $cohort ) );
+    }
+    else
+    {
+      $this->add_title( 
+        sprintf( $mailed_to ?
+                 'List of all unsynched %s participants whose source is %s who have been mailed to.' :
+                 'List of all %s participants whose source is %s and require a package mailed out.',
+                 $cohort,
+                 $db_source->name ) );
+    }
     
     // modifiers common to each iteration of the following loops
     $participant_mod = lib::create( 'database\modifier' );
+    if( $mailed_to )
+    {
+      $participant_mod->order_desc( 'status.datetime' );
+      $participant_mod->where( 'sync_datetime', '=', NULL );
+    }
     $participant_mod->where( 'cohort', '=', $cohort );
-    $participant_mod->where( 'source_id', '=', $db_source->id );
+    if( !is_null( $db_source ) ) $participant_mod->where( 'source_id', '=', $db_source->id );
 
     $contents = array();
     $participant_list =
-      $participant_class_name::select_for_event( 'package mailed', true, $participant_mod );
+      $participant_class_name::select_for_event( 'package mailed', $mailed_to, $participant_mod );
     foreach( $participant_list as $db_participant )
     {
       $db_address = $db_participant->get_first_address();
@@ -75,7 +90,7 @@ class mailout_report extends \cenozo\ui\pull\base_report
         $age = util::get_interval( $dob_datetime_obj )->y;
       }
 
-      $contents[] = array(
+      $row = array(
         'fr' == $db_participant->language ? 'fr' : 'en', // english if not set
         $db_participant->uid,
         $db_participant->first_name,
@@ -85,6 +100,23 @@ class mailout_report extends \cenozo\ui\pull\base_report
         $db_region->name,
         $db_address->postcode,
         $age );
+      
+      if( $mailed_to )
+      { // remove the age column and include the mailout date and site columns
+        $status_mod = lib::create( 'database\modifier' );
+        $status_mod->where( 'event', '=', 'package mailed' );
+        $status_mod->order_desc( 'datetime' );
+        $status_mod->limit( 1 );
+        $status_list = $db_participant->get_status_list( $status_mod );
+        $db_site = $db_participant->get_primary_site();
+        $site_name = is_null( $db_site ) ? 'None' : $db_site->name;
+        $db_status = current( $status_list );
+        array_unshift( $row, $site_name );
+        array_unshift( $row, strstr( $db_status->datetime, ' ', true ) );
+        array_pop( $row );
+      }
+
+      $contents[] = $row;
 
       // add packaged mailed status if requested to
       if( $mark_mailout )
@@ -108,6 +140,13 @@ class mailout_report extends \cenozo\ui\pull\base_report
       'Postal Code',
       'Age' );
     
+    if( $mailed_to )
+    { // include the mailout date and site columns
+      array_unshift( $header, 'Site' );
+      array_unshift( $header, 'Mailout Date' );
+      array_pop( $header );
+    }
+
     $this->add_table( NULL, $header, $contents, NULL );
   }
 }
